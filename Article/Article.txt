@@ -1,0 +1,44 @@
+A simple way to distribute game updates over multiple frames
+Some parts of a game logic might not need to be performed every frame. For example it might be OK for non-playable characters to have their decisions, their sensors, or their navigation requests performed only once every few seconds. Doing so can help increase the frame rate.
+The following image represents some frames of a game where a task (in red) is done every frame for every entities (the number on top is the total number of tasks performed for the corresponding frame).
+
+A way to reduce the processing time is to perform all the tasks at once, then wait some time.
+
+The issue with this approach is that the load is not spread across multiple frames. If the number of entity and the cost of the task his high, it would result in frame rate spikes. A different way is to force a maximum number of task per frame. On the left we set a maximum of 1 task per frame and on the right a maximum of 4 tasks per frames :
+
+This approach has the advantage of spreading the load, but the main issue is that the time between the updates depends on the number of entities. If the number of entities change during the course of the game, the way they will behave will change. To keep things consistent it might be better to force the task to be performed every [x] seconds no matter the number of entities (or every [x] frames if the frame rate is fixed). The following image represent this concept with 2 entities updated every 0.5 seconds:
+
+We sometime have to perform 0 task on a frame. When the number of entities increases we might have to perform multiple task per frame:
+
+E5 gets updated at frame 0 because we want E5 to get updated at frame 4, and we always want to keep the same interval. Note that it doesn’t really matter if we choose to update E2 at frame 0 along with E1, instead of E5 at frame 0 along with E1. For our purpose the following is equivalent, or better since it’s properly ordered:
+
+Getting this to work is actually quite simple. The following code shows an implementation in Unity.
+// The interval in seconds at which we want the tasks to be performed 
+float m_updateInterval = 0.5f;
+// The tasks to execute. 
+List<Action> m_items = new List<Action>();
+// An index in m_items used to know which items we are going to executed next
+int m_index = 0;
+// An accumulator to keep track of the time and the number of tasks performed
+float m_updateAccumulator = 0;
+Here is the update logic:
+// If we have 10 items and m_updateInterval is 0.5s, we need to do 20 tasks per seconds.
+float updatesPerSecond = (m_items.Count / m_updateInterval);
+// If we need to do 20 tasks per second and the frame rate is 100, we need to do 0.2 tasks per frame.
+float updatesPerFrame = updatesPerSecond * Time.deltaTime;
+// We accumulate 0.2 every frame. After 5 frames the accumulator will be set to 1.
+m_updateAccumulator += updatesPerFrame;
+// updateCount is the integer part of m_updateAccumulator. We make sure updatecount is not greater than the total number of task because we don't want to perform multiple time the same task per frame. 
+int updateCount = Mathf.Min(Mathf.FloorToInt(m_updateAccumulator), m_items.Count);
+// Remove the integer part of the accumulator since we are going to execute that amount of tasks.
+m_updateAccumulator -= updateCount;
+// Execute the right amount of tasks
+for (int i = 0; i < updateCount; ++i)
+{ 
+    // Do a Modulo before accessing m_items because m_index might
+    // be greater than m_items.Count if some items were removed.
+    m_index = (m_index + 1) % m_items.Count;
+    var action = m_items[m_index];
+    action();
+}
+A demo can be tested here. It is available on github. The capsules become red when they get updated, then they fade to white. A slider can be used to change the update interval of the task. Another slider is used to fake the cost of the task.

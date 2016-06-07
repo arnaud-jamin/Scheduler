@@ -18,6 +18,8 @@ public class Scheduler : MonoBehaviour
     //-----------------------------------------------------------------------------------------
     public int UpdateCount { get { return m_updateCount; } }
 
+    public float UpdateInterval { get { return m_updateInterval; } set { m_updateInterval = value; } }
+
     //-----------------------------------------------------------------------------------------
     public void Register(Action action)
     {
@@ -46,8 +48,6 @@ public class Scheduler : MonoBehaviour
 
         for (int i = 0; i < m_updateCount; ++i)
         {
-            // Do the modulo before accessing the array, because m_index might be greater than the array size at this point.
-            // We also increment before accessing the array because the order doesn't really matter.
             m_index = (m_index + 1) % m_items.Count;
 
             var action = m_items[m_index];

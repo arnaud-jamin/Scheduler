@@ -21,7 +21,6 @@ public class GameManager : SingletonBehaviour<GameManager>
     void Update()
     {
         m_navigationManager.Process();
-        m_spawnManager.Process();
         m_uiManager.Process();
     }
 }

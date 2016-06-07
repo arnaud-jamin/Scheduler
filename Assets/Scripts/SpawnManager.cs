@@ -6,7 +6,6 @@ public class SpawnManager : MonoBehaviour
 {
     //-----------------------------------------------------------------------------------------
     private List<GameObject> m_instances = new List<GameObject>();
-    private bool m_repeat = true;
 
     //-----------------------------------------------------------------------------------------
     [SerializeField]
@@ -25,7 +24,7 @@ public class SpawnManager : MonoBehaviour
     }
 
     //-----------------------------------------------------------------------------------------
-    void Spawn()
+    public void Spawn()
     {
         var instance = Instantiate(m_prefab);
         instance.transform.SetParent(m_container);
@@ -34,7 +33,7 @@ public class SpawnManager : MonoBehaviour
     }
 
     //-----------------------------------------------------------------------------------------
-    void Unspawn()
+    public void Unspawn()
     {
         if (m_instances.Count > 0)
         {
@@ -42,29 +41,5 @@ public class SpawnManager : MonoBehaviour
             m_instances.RemoveAt(m_instances.Count - 1);
             Destroy(instance);
         }
-    }
-
-    //-----------------------------------------------------------------------------------------
-    public void Process()
-    {
-        if (Input.GetButton("Spawn") && m_repeat)
-        {
-            Spawn();
-            StartCoroutine(WaitAndRepeat());
-        }
-
-        if (Input.GetButton("Unspawn") && m_repeat)
-        {
-            Unspawn();
-            StartCoroutine(WaitAndRepeat());
-        }
-    }
-
-    //-----------------------------------------------------------------------------------------
-    IEnumerator WaitAndRepeat()
-    {
-        m_repeat = false;
-        yield return new WaitForSeconds(0.05f);
-        m_repeat = true;
     }
 }
